@@ -75,12 +75,29 @@ input{width:100%;padding:8px;margin:5px 0;border-radius:10px;border:none}
 </div>
 
 <script>
-let cart=[];
-let products=JSON.parse(localStorage.getItem("products"))||[
-{name:"Carregador Turbo",price:49.90,image:"https://images.unsplash.com/photo-1511707171634-5f897ff02aa9"},
-{name:"Fone Bluetooth",price:89.90,image:"https://images.unsplash.com/photo-1585386959984-a4155223168f"}
+// Lista completa com os novos carregadores e cabos
+let products = JSON.parse(localStorage.getItem("products")) || [
+    { name: "GARRAFA TÉRMICA PRETA", price: 70.00, image: "https://i.ibb.co/vzrV1Xq/garrafa.jpg" },
+    { name: "CABO USB TIPO C BRANCO", price: 15.00, image: "https://i.ibb.co/kDfH7zG/cabo.jpg" },
+    { name: "FONE SEM FIO JBL PRETO", price: 70.00, image: "https://i.ibb.co/mS6v6f6/fone-jbl.jpg" },
+    { name: "FONE SEM FIO PURE BASS JBL", price: 70.00, image: "https://i.ibb.co/mS6v6f6/fone-bass.jpg" },
+    { name: "CABO IPHONE LIGHTNING 20W", price: 20.00, image: "https://i.ibb.co/Yy0fLzG/cabo-iphone.jpg" },
+    { name: "FONTE CARREGADOR IPHONE 20W", price: 25.00, image: "https://i.ibb.co/L8x5R9M/fonte-20w.jpg" },
+    { name: "CARREGADOR COMPLETO IPHONE", price: 35.00, image: "https://i.ibb.co/X7P6D4v/kit-iphone.jpg" },
+    { name: "CARREGADOR IPHONE TIPO C 20W", price: 35.00, image: "https://i.ibb.co/D8mN6S4/kit-tipo-c.jpg" },
+    { name: "FONTE CARREGADOR IPHONE TIPO-C", price: 25.00, image: "https://i.ibb.co/Gxc7R5N/fonte-tipo-c.jpg" }
 ];
 
+function checkout(){
+    let message = "Olá SN Mix Store, gostaria de encomendar:%0A%0A";
+    let total = 0;
+    cart.forEach(item => {
+        message += `• ${item.name} - R$ ${item.price.toFixed(2)}%0A`;
+        total += item.price;
+    });
+    message += `%0A*Total: R$ ${total.toFixed(2)}*`;
+    window.open(`https://wa.me/5591999240536?text=${message}`);
+}
 function saveProducts(){
 localStorage.setItem("products",JSON.stringify(products));
 renderProducts();
@@ -183,4 +200,5 @@ renderAdminProducts();
 Index.html
 Informações gerais
 TipoHTML
+
 Exibindo Index.html.
