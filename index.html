@@ -1,0 +1,186 @@
+
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SN Mix Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
+body{background:#0f172a;color:#fff}
+header{
+display:flex;justify-content:space-between;
+padding:15px 20px;background:#020617;align-items:center
+}
+h1{color:#00f5d4;cursor:pointer}
+button{cursor:pointer;border:none;border-radius:20px;padding:8px 15px;font-weight:600}
+.cart-btn{background:#00f5d4;color:#000}
+.products{
+display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:20px;padding:30px
+}
+.card{
+background:#1e293b;padding:15px;border-radius:15px;text-align:center
+}
+.card img{width:100%;border-radius:10px;height:180px;object-fit:cover}
+.price{color:#00f5d4;font-weight:700;margin:8px 0}
+.card button{background:#00f5d4;margin-top:5px}
+.cart{
+position:fixed;right:-350px;top:0;width:320px;height:100%;
+background:#111827;padding:20px;transition:0.4s;overflow:auto
+}
+.cart.active{right:0}
+.admin-panel{
+position:fixed;left:-400px;top:0;width:350px;height:100%;
+background:#1e293b;padding:20px;transition:0.4s;overflow:auto
+}
+.admin-panel.active{left:0}
+input{width:100%;padding:8px;margin:5px 0;border-radius:10px;border:none}
+.admin-btn{background:#00f5d4;width:100%;margin-top:10px}
+.delete{background:red;margin-top:5px}
+.close{position:absolute;right:15px;top:10px;cursor:pointer}
+.total{color:#00f5d4;font-weight:700;margin-top:15px}
+.checkout{background:#25d366;padding:10px;margin-top:10px;text-align:center;border-radius:10px}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1 onclick="adminClick()">SN Mix Store</h1>
+<button class="cart-btn" onclick="toggleCart()">Carrinho (<span id="count">0</span>)</button>
+</header>
+
+<section class="products" id="products"></section>
+
+<div class="cart" id="cart">
+<span class="close" onclick="toggleCart()">✖</span>
+<h3>Carrinho</h3>
+<div id="cart-items"></div>
+<div class="total">Total: R$ <span id="total">0</span></div>
+<div class="checkout" onclick="checkout()">Finalizar no WhatsApp</div>
+</div>
+
+<div class="admin-panel" id="admin">
+<span class="close" onclick="toggleAdmin()">✖</span>
+<h3>Painel Administrativo</h3>
+<input type="text" id="name" placeholder="Nome do Produto">
+<input type="number" id="price" placeholder="Preço">
+<input type="text" id="image" placeholder="URL da imagem">
+<button class="admin-btn" onclick="addProduct()">Adicionar Produto</button>
+<hr style="margin:15px 0">
+<div id="admin-products"></div>
+</div>
+
+<script>
+let cart=[];
+let products=JSON.parse(localStorage.getItem("products"))||[
+{name:"Carregador Turbo",price:49.90,image:"https://images.unsplash.com/photo-1511707171634-5f897ff02aa9"},
+{name:"Fone Bluetooth",price:89.90,image:"https://images.unsplash.com/photo-1585386959984-a4155223168f"}
+];
+
+function saveProducts(){
+localStorage.setItem("products",JSON.stringify(products));
+renderProducts();
+renderAdminProducts();
+}
+
+function renderProducts(){
+let container=document.getElementById("products");
+container.innerHTML="";
+products.forEach((p,i)=>{
+container.innerHTML+=`
+<div class="card">
+<img src="${p.image}">
+<h4>${p.name}</h4>
+<div class="price">R$ ${p.price.toFixed(2)}</div>
+<button onclick="addToCart('${p.name}',${p.price})">Adicionar</button>
+</div>`;
+});
+}
+
+function renderAdminProducts(){
+let container=document.getElementById("admin-products");
+container.innerHTML="";
+products.forEach((p,i)=>{
+container.innerHTML+=`
+<div>
+${p.name} - R$ ${p.price}
+<button class="delete" onclick="deleteProduct(${i})">Excluir</button>
+</div>`;
+});
+}
+
+function addProduct(){
+let name=document.getElementById("name").value;
+let price=parseFloat(document.getElementById("price").value);
+let image=document.getElementById("image").value;
+if(name&&price&&image){
+products.push({name,price,image});
+saveProducts();
+}
+}
+
+function deleteProduct(i){
+products.splice(i,1);
+saveProducts();
+}
+
+function toggleCart(){
+document.getElementById("cart").classList.toggle("active");
+}
+
+function toggleAdmin(){
+document.getElementById("admin").classList.toggle("active");
+}
+
+function addToCart(name,price){
+cart.push({name,price});
+updateCart();
+}
+
+function updateCart(){
+let container=document.getElementById("cart-items");
+container.innerHTML="";
+let total=0;
+cart.forEach(item=>{
+total+=item.price;
+container.innerHTML+=`<div>${item.name} - R$ ${item.price.toFixed(2)}</div>`;
+});
+document.getElementById("total").innerText=total.toFixed(2);
+document.getElementById("count").innerText=cart.length;
+}
+
+function checkout(){
+let message="Olá, quero comprar:%0A";
+let total=0;
+cart.forEach(item=>{
+message+=`- ${item.name} (R$ ${item.price.toFixed(2)})%0A`;
+total+=item.price;
+});
+message+=`%0ATotal: R$ ${total.toFixed(2)}`;
+window.open(`https://wa.me/5591999240536?text=${message}`);
+}
+
+let clickCount=0;
+function adminClick(){
+clickCount++;
+if(clickCount>=3){
+let senha=prompt("Digite a senha do administrador:");
+if(senha==="1234"){toggleAdmin()}
+clickCount=0;
+}
+}
+
+renderProducts();
+renderAdminProducts();
+</script>
+
+</body>
+</html>
+Index.html
+Informações gerais
+TipoHTML
+Exibindo Index.html.
