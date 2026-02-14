@@ -1,204 +1,75 @@
-
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SN Mix Store</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
-body{background:#0f172a;color:#fff}
-header{
-display:flex;justify-content:space-between;
-padding:15px 20px;background:#020617;align-items:center
-}
-h1{color:#00f5d4;cursor:pointer}
-button{cursor:pointer;border:none;border-radius:20px;padding:8px 15px;font-weight:600}
-.cart-btn{background:#00f5d4;color:#000}
-.products{
-display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:20px;padding:30px
-}
-.card{
-background:#1e293b;padding:15px;border-radius:15px;text-align:center
-}
-.card img{width:100%;border-radius:10px;height:180px;object-fit:cover}
-.price{color:#00f5d4;font-weight:700;margin:8px 0}
-.card button{background:#00f5d4;margin-top:5px}
-.cart{
-position:fixed;right:-350px;top:0;width:320px;height:100%;
-background:#111827;padding:20px;transition:0.4s;overflow:auto
-}
-.cart.active{right:0}
-.admin-panel{
-position:fixed;left:-400px;top:0;width:350px;height:100%;
-background:#1e293b;padding:20px;transition:0.4s;overflow:auto
-}
-.admin-panel.active{left:0}
-input{width:100%;padding:8px;margin:5px 0;border-radius:10px;border:none}
-.admin-btn{background:#00f5d4;width:100%;margin-top:10px}
-.delete{background:red;margin-top:5px}
-.close{position:absolute;right:15px;top:10px;cursor:pointer}
-.total{color:#00f5d4;font-weight:700;margin-top:15px}
-.checkout{background:#25d366;padding:10px;margin-top:10px;text-align:center;border-radius:10px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SN Mix Store</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: white; margin: 0; padding: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .card { background: #1e1e1e; padding: 10px; border-radius: 8px; text-align: center; }
+        .card img { width: 100%; border-radius: 5px; height: 120px; object-fit: cover; }
+        button { background: #00f5d4; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 5px; font-weight: bold; }
+        .cart-btn { position: fixed; top: 20px; right: 20px; background: #00f5d4; padding: 15px; border-radius: 50px; color: black; font-weight: bold; }
+    </style>
 </head>
-
 <body>
 
-<header>
-<h1 onclick="adminClick()">SN Mix Store</h1>
-<button class="cart-btn" onclick="toggleCart()">Carrinho (<span id="count">0</span>)</button>
-</header>
+    <h1 onclick="adminCount++" style="cursor:pointer">SN Mix Store</h1>
+    <div class="grid" id="product-grid"></div>
 
-<section class="products" id="products"></section>
+    <button class="cart-btn" onclick="checkout()">🛒 Carrinho (<span id="cart-count">0</span>)</button>
 
-<div class="cart" id="cart">
-<span class="close" onclick="toggleCart()">✖</span>
-<h3>Carrinho</h3>
-<div id="cart-items"></div>
-<div class="total">Total: R$ <span id="total">0</span></div>
-<div class="checkout" onclick="checkout()">Finalizar no WhatsApp</div>
-</div>
+    <script>
+        let cart = [];
+        let adminCount = 0;
 
-<div class="admin-panel" id="admin">
-<span class="close" onclick="toggleAdmin()">✖</span>
-<h3>Painel Administrativo</h3>
-<input type="text" id="name" placeholder="Nome do Produto">
-<input type="number" id="price" placeholder="Preço">
-<input type="text" id="image" placeholder="URL da imagem">
-<button class="admin-btn" onclick="addProduct()">Adicionar Produto</button>
-<hr style="margin:15px 0">
-<div id="admin-products"></div>
-</div>
+        // Lista de produtos baseada nos seus prints
+        const products = [
+            { name: "GARRAFA TÉRMICA PRETA", price: 70.00, image: "https://i.ibb.co/vzrV1Xq/garrafa.jpg" },
+            { name: "CABO USB TIPO C BRANCO", price: 15.00, image: "https://i.ibb.co/kDfH7zG/cabo.jpg" },
+            { name: "FONE SEM FIO JBL PRETO", price: 70.00, image: "https://i.ibb.co/mS6v6f6/fone-jbl.jpg" },
+            { name: "FONE SEM FIO PURE BASS", price: 70.00, image: "https://i.ibb.co/mS6v6f6/fone-bass.jpg" },
+            { name: "CABO IPHONE 20W", price: 20.00, image: "https://i.ibb.co/Yy0fLzG/cabo-iphone.jpg" },
+            { name: "FONTE IPHONE 20W", price: 25.00, image: "https://i.ibb.co/L8x5R9M/fonte-20w.jpg" },
+            { name: "CARREGADOR COMPLETO IPHONE", price: 35.00, image: "https://i.ibb.co/X7P6D4v/kit-iphone.jpg" },
+            { name: "CARREGADOR TIPO C 20W", price: 35.00, image: "https://i.ibb.co/D8mN6S4/kit-tipo-c.jpg" },
+            { name: "FONTE IPHONE TIPO-C", price: 25.00, image: "https://i.ibb.co/Gxc7R5N/fonte-tipo-c.jpg" }
+        ];
 
-<script>
-// Lista completa com os novos carregadores e cabos
-let products = JSON.parse(localStorage.getItem("products")) || [
-    { name: "GARRAFA TÉRMICA PRETA", price: 70.00, image: "https://i.ibb.co/vzrV1Xq/garrafa.jpg" },
-    { name: "CABO USB TIPO C BRANCO", price: 15.00, image: "https://i.ibb.co/kDfH7zG/cabo.jpg" },
-    { name: "FONE SEM FIO JBL PRETO", price: 70.00, image: "https://i.ibb.co/mS6v6f6/fone-jbl.jpg" },
-    { name: "FONE SEM FIO PURE BASS JBL", price: 70.00, image: "https://i.ibb.co/mS6v6f6/fone-bass.jpg" },
-    { name: "CABO IPHONE LIGHTNING 20W", price: 20.00, image: "https://i.ibb.co/Yy0fLzG/cabo-iphone.jpg" },
-    { name: "FONTE CARREGADOR IPHONE 20W", price: 25.00, image: "https://i.ibb.co/L8x5R9M/fonte-20w.jpg" },
-    { name: "CARREGADOR COMPLETO IPHONE", price: 35.00, image: "https://i.ibb.co/X7P6D4v/kit-iphone.jpg" },
-    { name: "CARREGADOR IPHONE TIPO C 20W", price: 35.00, image: "https://i.ibb.co/D8mN6S4/kit-tipo-c.jpg" },
-    { name: "FONTE CARREGADOR IPHONE TIPO-C", price: 25.00, image: "https://i.ibb.co/Gxc7R5N/fonte-tipo-c.jpg" }
-];
+        function displayProducts() {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = "";
+            products.forEach((p, index) => {
+                grid.innerHTML += `
+                    <div class="card">
+                        <img src="${p.image}" alt="${p.name}">
+                        <h3>${p.name}</h3>
+                        <p>R$ ${p.price.toFixed(2)}</p>
+                        <button onclick="addToCart(${index})">Adicionar</button>
+                    </div>`;
+            });
+        }
 
-function checkout(){
-    let message = "Olá SN Mix Store, gostaria de encomendar:%0A%0A";
-    let total = 0;
-    cart.forEach(item => {
-        message += `• ${item.name} - R$ ${item.price.toFixed(2)}%0A`;
-        total += item.price;
-    });
-    message += `%0A*Total: R$ ${total.toFixed(2)}*`;
-    window.open(`https://wa.me/5591999240536?text=${message}`);
-}
-function saveProducts(){
-localStorage.setItem("products",JSON.stringify(products));
-renderProducts();
-renderAdminProducts();
-}
+        function addToCart(index) {
+            cart.push(products[index]);
+            document.getElementById('cart-count').innerText = cart.length;
+            alert("Produto adicionado!");
+        }
 
-function renderProducts(){
-let container=document.getElementById("products");
-container.innerHTML="";
-products.forEach((p,i)=>{
-container.innerHTML+=`
-<div class="card">
-<img src="${p.image}">
-<h4>${p.name}</h4>
-<div class="price">R$ ${p.price.toFixed(2)}</div>
-<button onclick="addToCart('${p.name}',${p.price})">Adicionar</button>
-</div>`;
-});
-}
+        function checkout() {
+            if (cart.length === 0) return alert("Carrinho vazio!");
+            let msg = "Olá SN Mix Store, gostaria de encomendar:%0A%0A";
+            let total = 0;
+            cart.forEach(item => {
+                msg += `• ${item.name} - R$ ${item.price.toFixed(2)}%0A`;
+                total += item.price;
+            });
+            msg += `%0A*Total: R$ ${total.toFixed(2)}*`;
+            window.open(`https://wa.me/5591999240536?text=${msg}`);
+        }
 
-function renderAdminProducts(){
-let container=document.getElementById("admin-products");
-container.innerHTML="";
-products.forEach((p,i)=>{
-container.innerHTML+=`
-<div>
-${p.name} - R$ ${p.price}
-<button class="delete" onclick="deleteProduct(${i})">Excluir</button>
-</div>`;
-});
-}
-
-function addProduct(){
-let name=document.getElementById("name").value;
-let price=parseFloat(document.getElementById("price").value);
-let image=document.getElementById("image").value;
-if(name&&price&&image){
-products.push({name,price,image});
-saveProducts();
-}
-}
-
-function deleteProduct(i){
-products.splice(i,1);
-saveProducts();
-}
-
-function toggleCart(){
-document.getElementById("cart").classList.toggle("active");
-}
-
-function toggleAdmin(){
-document.getElementById("admin").classList.toggle("active");
-}
-
-function addToCart(name,price){
-cart.push({name,price});
-updateCart();
-}
-
-function updateCart(){
-let container=document.getElementById("cart-items");
-container.innerHTML="";
-let total=0;
-cart.forEach(item=>{
-total+=item.price;
-container.innerHTML+=`<div>${item.name} - R$ ${item.price.toFixed(2)}</div>`;
-});
-document.getElementById("total").innerText=total.toFixed(2);
-document.getElementById("count").innerText=cart.length;
-}
-
-function checkout(){
-let message="Olá, quero comprar:%0A";
-let total=0;
-cart.forEach(item=>{
-message+=`- ${item.name} (R$ ${item.price.toFixed(2)})%0A`;
-total+=item.price;
-});
-message+=`%0ATotal: R$ ${total.toFixed(2)}`;
-window.open(`https://wa.me/5591999240536?text=${message}`);
-}
-
-let clickCount=0;
-function adminClick(){
-clickCount++;
-if(clickCount>=3){
-let senha=prompt("Digite a senha do administrador:");
-if(senha==="1234"){toggleAdmin()}
-clickCount=0;
-}
-}
-
-renderProducts();
-renderAdminProducts();
-</script>
-
+        displayProducts();
+    </script>
 </body>
 </html>
-Index.html
-Informações gerais
-TipoHTML
-
-Exibindo Index.html.
