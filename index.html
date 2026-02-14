@@ -1,51 +1,132 @@
-// 1. Sua lista de produtos permanece a mesma
-const products = [
-    { name: "GARRAFA TÉRMICA PRETA", price: 70.00, image: "https://i.ibb.co/vzrV1Xq/garrafa.jpg" },
-    { name: "CABO USB TIPO C BRANCO", price: 15.00, image: "https://i.ibb.co/kDfH7zG/cabo.jpg" },
-    { name: "FONE SEM FIO JBL PRETO", price: 70.00, image: "https://i.ibb.co/mS6v6f6/fone-jbl.jpg" },
-    { name: "FONE SEM FIO PURE BASS", price: 70.00, image: "https://i.ibb.co/mS6v6f6/fone-bass.jpg" },
-    { name: "CABO IPHONE 20W", price: 20.00, image: "https://i.ibb.co/Yy0fLzG/cabo-iphone.jpg" },
-    { name: "FONTE IPHONE 20W", price: 25.00, image: "https://i.ibb.co/L8x5R9M/fonte-20w.jpg" },
-    { name: "CARREGADOR COMPLETO IPHONE", price: 35.00, image: "https://i.ibb.co/X7P6D4v/kit-iphone.jpg" },
-    { name: "CARREGADOR TIPO C 20W", price: 35.00, image: "https://i.ibb.co/D8mN6S4/kit-tipo-c.jpg" },
-    { name: "FONTE IPHONE TIPO-C", price: 25.00, image: "https://i.ibb.co/Gxc7R5N/fonte-tipo-c.jpg" }
-];
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SN Mix Store</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: white; margin: 0; padding: 20px; padding-bottom: 80px; }
+        h1 { text-align: center; color: #00f5d4; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .card { background: #1e1e1e; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #333; }
+        .card img { width: 100%; border-radius: 5px; height: 120px; object-fit: cover; background: #222; }
+        .price { color: #00f5d4; font-weight: bold; margin: 10px 0; }
+        button { background: #00f5d4; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; color: #000; }
+        
+        /* Botão Flutuante do Carrinho */
+        .cart-btn { position: fixed; bottom: 20px; right: 20px; background: #00f5d4; padding: 15px 25px; border-radius: 50px; color: black; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 100; border: none; }
 
-let cart = [];
+        /* Janela do Carrinho (Modal) */
+        #cart-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 101; justify-content: center; align-items: center; }
+        .modal-content { background: #1e1e1e; width: 90%; max-width: 400px; padding: 20px; border-radius: 10px; max-height: 80vh; overflow-y: auto; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding: 10px 0; }
+        .remove-btn { background: #ff4d4d; color: white; width: auto; padding: 5px 10px; font-size: 12px; }
+        .close-modal { background: #666; margin-top: 10px; }
+        .finish-btn { background: #00f5d4; margin-top: 15px; }
+    </style>
+</head>
+<body>
 
-// 2. Nova função para adicionar e mostrar aviso
-function addToCart(index) {
-    cart.push(products[index]);
-    updateCartDisplay();
-}
+    <h1>SN Mix Store</h1>
+    <div class="grid" id="product-grid"></div>
 
-// 3. FUNÇÃO PARA REMOVER (O que estava faltando!)
-function removeFromCart(cartIndex) {
-    cart.splice(cartIndex, 1); // Remove o item da lista
-    updateCartDisplay();
-}
+    <button class="cart-btn" onclick="openCart()">🛒 Ver Carrinho (<span id="cart-count">0</span>)</button>
 
-// 4. Atualiza o contador e a lista visual (opcional)
-function updateCartDisplay() {
-    document.getElementById('cart-count').innerText = cart.length;
-}
+    <div id="cart-modal">
+        <div class="modal-content">
+            <h2>Seu Carrinho</h2>
+            <div id="cart-items-list"></div>
+            <div id="cart-total" style="margin-top:15px; font-weight:bold; text-align:right;"></div>
+            <button class="finish-btn" onclick="sendWhatsApp()">Finalizar no WhatsApp</button>
+            <button class="close-modal" onclick="closeCart()">Continuar Comprando</button>
+        </div>
+    </div>
 
-// 5. Checkout que agora pergunta se quer remover antes de ir pro Zap
-function checkout() {
-    if (cart.length === 0) return alert("O seu carrinho está vazio!");
-    
-    // Mostra o que tem no carrinho e pergunta se quer finalizar
-    let resumo = cart.map((item, index) => `${index + 1}. ${item.name} - R$ ${item.price.toFixed(2)}`).join('\n');
-    let confirmar = confirm("Itens no Carrinho:\n\n" + resumo + "\n\nDeseja finalizar a compra? \n(Para remover um item, você teria que recomeçar o carrinho nesta versão simples ou me pedir para criar uma lista visual de exclusão)");
+    <script>
+        let cart = [];
 
-    if (confirmar) {
-        let msg = "Olá SN Mix Store, quero estes produtos:%0A%0A";
-        let total = 0;
-        cart.forEach(item => {
-            msg += `• ${item.name} - R$ ${item.price.toFixed(2)}%0A`;
-            total += item.price;
-        });
-        msg += `%0A*Total: R$ ${total.toFixed(2)}*`;
-        window.open(`https://wa.me/5591999240536?text=${msg}`);
-    }
-}
+        // Lista de produtos baseada nos seus anúncios
+        const products = [
+            { name: "GARRAFA TÉRMICA PRETA", price: 70.00, image: "https://i.ibb.co/vzrV1Xq/garrafa.jpg" },
+            { name: "CABO USB TIPO C BRANCO", price: 15.00, image: "https://i.ibb.co/kDfH7zG/cabo.jpg" },
+            { name: "FONE SEM FIO JBL PRETO", price: 70.00, image: "https://i.ibb.co/mS6v6f6/fone-jbl.jpg" },
+            { name: "CABO IPHONE 20W", price: 20.00, image: "https://i.ibb.co/Yy0fLzG/cabo-iphone.jpg" },
+            { name: "FONTE IPHONE 20W", price: 25.00, image: "https://i.ibb.co/L8x5R9M/fonte-20w.jpg" },
+            { name: "CARREGADOR COMPLETO IPHONE", price: 35.00, image: "https://i.ibb.co/X7P6D4v/kit-iphone.jpg" },
+            { name: "CARREGADOR TIPO C 20W", price: 35.00, image: "https://i.ibb.co/D8mN6S4/kit-tipo-c.jpg" }
+        ];
+
+        function displayProducts() {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = products.map((p, i) => `
+                <div class="card">
+                    <img src="${p.image}" onerror="this.src='https://via.placeholder.com/150'">
+                    <h4>${p.name}</h4>
+                    <div class="price">R$ ${p.price.toFixed(2)}</div>
+                    <button onclick="addToCart(${i})">Adicionar</button>
+                </div>`).join('');
+        }
+
+        function addToCart(i) {
+            cart.push(products[i]);
+            updateCounter();
+            alert("Adicionado ao carrinho!");
+        }
+
+        function updateCounter() {
+            document.getElementById('cart-count').innerText = cart.length;
+        }
+
+        function openCart() {
+            const modal = document.getElementById('cart-modal');
+            const list = document.getElementById('cart-items-list');
+            const totalDiv = document.getElementById('cart-total');
+            
+            modal.style.display = 'flex';
+            list.innerHTML = "";
+            let total = 0;
+
+            if (cart.length === 0) {
+                list.innerHTML = "<p>Carrinho vazio...</p>";
+                totalDiv.innerText = "";
+                return;
+            }
+
+            cart.forEach((item, index) => {
+                total += item.price;
+                list.innerHTML += `
+                    <div class="cart-item">
+                        <span>${item.name}</span>
+                        <span>R$ ${item.price.toFixed(2)}</span>
+                        <button class="remove-btn" onclick="removeFromCart(${index})">Remover</button>
+                    </div>`;
+            });
+            totalDiv.innerText = "Total: R$ " + total.toFixed(2);
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCounter();
+            openCart(); // Recarrega a lista no modal
+        }
+
+        function closeCart() {
+            document.getElementById('cart-modal').style.display = 'none';
+        }
+
+        function sendWhatsApp() {
+            if (cart.length === 0) return alert("Adicione algo antes!");
+            let msg = "Olá SN Mix Store, gostaria de encomendar:%0A%0A";
+            let total = 0;
+            cart.forEach(item => {
+                msg += `• ${item.name} - R$ ${item.price.toFixed(2)}%0A`;
+                total += item.price;
+            });
+            msg += `%0A*Total: R$ ${total.toFixed(2)}*`;
+            window.open(`https://wa.me/5591999240536?text=${msg}`);
+        }
+
+        displayProducts();
+    </script>
+</body>
+</html>
